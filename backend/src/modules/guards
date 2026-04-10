@@ -1,1 +1,39 @@
 
+// backend/src/modules/guards/entities/guard.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { User } from '../../users/entities/user.entity';
+import { Patrol } from '../../patrols/entities/patrol.entity';
+
+@Entity('guards')
+export class Guard {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @ManyToOne(() => User, { eager: true })
+  @JoinColumn({ name: 'userId' })
+  user: User;
+
+  @Column()
+  userId: string;
+
+  @Column({ type: 'enum', enum: ['ACTIVE', 'ON_DUTY', 'OFF_DUTY', 'SUSPENDED', 'RESIGNED'] })
+  status: string;
+
+  @Column({ type: 'text', nullable: true })
+  certifications: string;
+
+  @Column({ type: 'text', nullable: true })
+  skills: string;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  hourlyRate: number;
+
+  @Column({ type: 'simple-array', nullable: true })
+  assignedSites: string[];
+
+  @Column({ type: 'geography', spatialFeatureType: 'Point', srid: 4326, nullable: true })
+  currentLocation: string;
+
+  @OneToMany(() => Patrol, patrol => patrol.guard)
+  patrols: Patrol[];
+}
