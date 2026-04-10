@@ -1,1 +1,48 @@
 
+// backend/src/modules/loans/entities/loan.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { User } from '../../users/entities/user.entity';
+
+@Entity('loans')
+export class Loan {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @ManyToOne(() => User, { eager: true })
+  @JoinColumn({ name: 'employeeId' })
+  employee: User;
+
+  @Column()
+  employeeId: string;
+
+  @Column({ type: 'decimal', precision: 12, scale: 2 })
+  amount: number;
+
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 5.00 })
+  interestRate: number;
+
+  @Column({ type: 'decimal', precision: 12, scale: 2 })
+  totalRepayable: number;
+
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  amountRepaid: number;
+
+  @Column({ type: 'enum', enum: ['PENDING', 'APPROVED', 'REJECTED', 'ACTIVE', 'COMPLETED', 'DEFAULTED'] })
+  status: string;
+
+  @Column({ type: 'integer' })
+  durationMonths: number;
+
+  @Column({ type: 'decimal', precision: 12, scale: 2 })
+  monthlyDeduction: number;
+
+  @Column({ type: 'text', nullable: true })
+  purpose: string;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'approvedById' })
+  approvedBy: User;
+
+  @Column({ type: 'timestamp', nullable: true })
+  approvedAt: Date;
+}
