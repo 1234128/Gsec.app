@@ -1,1 +1,71 @@
+# docker-compose.yml
+version: '3.8'
 
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: gsec_postgres
+    environment:
+      POSTGRES_DB: gsec_db
+      POSTGRES_USER: gsec_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - gsec_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: gsec_redis
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - gsec_network
+
+  backend:
+    build: ./backend
+    container_name: gsec_backend
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: gsec_user
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: gsec_db
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - gsec_network
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: gsec_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
+    depends_on:
+      - backend
+    networks:
+      - gsec_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  gsec_network:
+    driver: bridge
