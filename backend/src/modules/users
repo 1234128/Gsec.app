@@ -1,1 +1,52 @@
 
+// backend/src/modules/users/entities/user.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Role } from '../../roles/entities/role.entity';
+
+@Entity('users')
+export class User {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column()
+  firstName: string;
+
+  @Column()
+  lastName: string;
+
+  @Column({ unique: true })
+  email: string;
+
+  @Column()
+  password: string;
+
+  @Column({ nullable: true })
+  phone: string;
+
+  @Column({ nullable: true })
+  employeeId: string;
+
+  @Column({ default: true })
+  isActive: boolean;
+
+  @ManyToOne(() => Role, role => role.users, { eager: true })
+  @JoinColumn({ name: 'roleId' })
+  role: Role;
+
+  @Column()
+  roleId: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  lastLoginAt: Date;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  // Helper method to check if user can manage another user's privileges
+  canManageUser(targetUser: User): boolean {
+    return this.role.tier > targetUser.role.tier || this.role.tier === RoleTier.SUPER_ADMIN;
+  }
+}
