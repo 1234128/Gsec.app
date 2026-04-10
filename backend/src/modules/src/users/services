@@ -1,1 +1,68 @@
 
+// backend/src/modules/users/services/privilege.service.ts
+import { Injectable, ForbiddenException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../entities/user.entity';
+import { Role } from '../../roles/entities/role.entity';
+import { RoleTier } from '../../modules/roles/enums/role-tier.enum';
+
+@Injectable()
+export class PrivilegeService {
+  constructor(
+    @InjectRepository(User)
+    private userRepo: Repository<User>,
+    @InjectRepository(Role)
+    private roleRepo: Repository<Role>,
+  ) {}
+
+  async updateUserRole(
+    adminId: string,
+    targetUserId: string,
+    newRoleId: string
+  ): Promise<User> {
+    const admin = await this.userRepo.findOne({ 
+      where: { id: adminId }, 
+      relations: ['role'] 
+    });
+    
+    const targetUser = await this.userRepo.findOne({ 
+      where: { id: targetUserId }, 
+      relations: ['role'] 
+    });
+
+    const newRole = await this.roleRepo.findOne({ where: { id: newRoleId } });
+
+    // Only Super Admin can assign Super Admin role
+    if (newRole.tier === RoleTier.SUPER_ADMIN && admin.role.tier !== RoleTier.SUPER_ADMIN) {
+      throw new ForbiddenException('Only Super Admin can assign Super Admin privileges');
+    }
+
+    // Cannot modify users of equal or higher tier
+    if (targetUser.role.tier >= admin.role.tier && admin.role.tier !== RoleTier.SUPER_ADMIN) {
+      throw new ForbiddenException('Cannot modify users with equal or higher privileges');
+    }
+
+    targetUser.role = newRole;
+    targetUser.roleId = newRoleId;
+    
+    return this.userRepo.save(targetUser);
+  }
+
+  async getEditableRoles(adminId: string): Promise<Role[]> {
+    const admin = await this.userRepo.findOne({ 
+      where: { id: adminId }, 
+      relations: ['role'] 
+    });
+
+    // Super Admin can see all roles, others can only see roles below their tier
+    if (admin.role.tier === RoleTier.SUPER_ADMIN) {
+      return this.roleRepo.find({ order: { tier: 'DESC' } });
+    }
+
+    return this.roleRepo.find({ 
+      where: { tier: LessThan(admin.role.tier) },
+      order: { tier: 'DESC' }
+    });
+  }
+}
