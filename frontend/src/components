@@ -1,1 +1,85 @@
 
+// frontend/src/components/Logo.tsx
+'use client';
+
+import React from 'react';
+
+interface LogoProps {
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  showText?: boolean;
+}
+
+const sizes = {
+  sm: { container: 'w-10 h-10', text: 'text-lg' },
+  md: { container: 'w-16 h-16', text: 'text-2xl' },
+  lg: { container: 'w-24 h-24', text: 'text-4xl' },
+  xl: { container: 'w-32 h-32', text: 'text-5xl' },
+};
+
+export default function Logo({ size = 'md', showText = true }: LogoProps) {
+  const { container, text } = sizes[size];
+
+  return (
+    <div className="flex items-center gap-3">
+      <div className={`${container} relative`}>
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          {/* Shield Background */}
+          <path
+            d="M50 5 L90 20 V50 C90 75 50 95 50 95 C50 95 10 75 10 50 V20 Z"
+            fill="url(#shieldGradient)"
+            stroke="#d97706"
+            strokeWidth="3"
+          />
+          
+          {/* Inner Shield Pattern */}
+          <path
+            d="M50 15 L80 27 V50 C80 68 50 85 50 85 C50 85 20 68 20 50 V27 Z"
+            fill="#1e3a8a"
+            opacity="0.9"
+          />
+          
+          {/* G Letter */}
+          <text
+            x="50"
+            y="65"
+            textAnchor="middle"
+            fill="#fbbf24"
+            fontSize="45"
+            fontWeight="bold"
+            fontFamily="system-ui"
+          >
+            G
+          </text>
+          
+          {/* Security Cross */}
+          <path
+            d="M50 25 L50 35 M45 30 L55 30"
+            stroke="#fbbf24"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          
+          {/* Definitions */}
+          <defs>
+            <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e40af" />
+              <stop offset="50%" stopColor="#1e3a8a" />
+              <stop offset="100%" stopColor="#172554" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      
+      {showText && (
+        <div className="flex flex-col">
+          <span className={`${text} font-bold bg-gradient-to-r from-gsec-blue-800 to-gsec-gold-600 bg-clip-text text-transparent`}>
+            Gsec
+          </span>
+          <span className="text-xs text-gsec-gold-700 font-medium tracking-wider uppercase">
+            Security Management
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
