@@ -1,1 +1,35 @@
 
+// backend/src/common/guards/roles.guard.ts
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { RoleTier } from '../../modules/roles/enums/role-tier.enum';
+
+@Injectable()
+export class RolesGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
+  canActivate(context: ExecutionContext): boolean {
+    const requiredTier = this.reflector.getAllAndOverride<RoleTier>('tier', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (!requiredTier) return true;
+
+    const { user } = context.switchToHttp().getRequest();
+    
+    if (!user || user.role.tier < requiredTier) {
+      throw new ForbiddenException('Insufficient privileges');
+    }
+
+    return true;
+  }
+}
+
+// Decorator
+// backend/src/common/decorators/roles.decorator.ts
+import { SetMetadata } from '@nestjs/common';
+import { RoleTier } from '../../modules/roles/enums/role-tier.enum';
+
+export const ROLES_KEY = 'tier';
+export const RequireTier = (tier: RoleTier) => SetMetadata(ROLES_KEY, tier);
