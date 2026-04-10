@@ -1,1 +1,35 @@
 
+// backend/src/modules/roles/enums/role-tier.enum.ts
+export enum RoleTier {
+  SUPER_ADMIN = 5,    // Full system access, can edit any privileges
+  ADMIN = 4,          // Company admin, manage all resources
+  MANAGER = 3,        // Regional/department manager
+  SUPERVISOR = 2,     // Team lead, guard supervisor
+  GUARD = 1,          // Security guard (self-service only)
+  VIEWER = 0,         // Read-only access (clients, auditors)
+}
+
+// backend/src/modules/roles/entities/role.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { User } from '../../users/entities/user.entity';
+
+@Entity('roles')
+export class Role {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ unique: true })
+  name: string;
+
+  @Column({ type: 'enum', enum: RoleTier, default: RoleTier.VIEWER })
+  tier: RoleTier;
+
+  @Column({ type: 'json', default: {} })
+  permissions: Record<string, boolean>;
+
+  @Column({ default: true })
+  isActive: boolean;
+
+  @OneToMany(() => User, user => user.role)
+  users: User[];
+}
